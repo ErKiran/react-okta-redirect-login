@@ -1,4 +1,31 @@
+import { Routes, Route, Navigate } from "react-router-dom";
+import { LoginCallback, useOktaAuth } from "@okta/okta-react";
+
 function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login/callback" element={<LoginCallback />} />
+      <Route path="/dashboard" element={<ProtectedDashboard />} />
+    </Routes>
+  );
+}
+
+function Home() {
+  const { oktaAuth, authState } = useOktaAuth();
+
+  const login = async () => {
+    await oktaAuth.signInWithRedirect({
+      originalUri: "/dashboard",
+    });
+  };
+
+  const logout = async () => {
+    await oktaAuth.signOut({
+      postLogoutRedirectUri: window.location.origin,
+    });
+  };
+
   return (
     <main style={styles.page}>
       <section style={styles.card}>
@@ -11,13 +38,85 @@ function App() {
           sign-in page instead of collecting passwords inside the app.
         </p>
 
-        <button style={styles.button}>
-          Login with Okta Redirect
-        </button>
+        {authState?.isAuthenticated ? (
+          <>
+            <p style={styles.success}>You are already signed in.</p>
+
+            <div style={styles.actions}>
+              <a href="/dashboard" style={styles.linkButton}>
+                Go to Dashboard
+              </a>
+
+              <button onClick={logout} style={styles.secondaryButton}>
+                Logout
+              </button>
+            </div>
+          </>
+        ) : (
+          <button onClick={login} style={styles.button}>
+            Login with Okta Redirect
+          </button>
+        )}
 
         <p style={styles.note}>
-          In this first step, the button does not do anything yet.
+          The React app does not collect your password. Okta handles login.
         </p>
+      </section>
+    </main>
+  );
+}
+
+function ProtectedDashboard() {
+  const { oktaAuth, authState } = useOktaAuth();
+
+  if (!authState) {
+    return (
+      <main style={styles.page}>
+        <section style={styles.card}>
+          <p>Loading authentication state...</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!authState.isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  const claims = authState.idToken?.claims;
+
+  const logout = async () => {
+    await oktaAuth.signOut({
+      postLogoutRedirectUri: window.location.origin,
+    });
+  };
+
+  return (
+    <main style={styles.page}>
+      <section style={styles.card}>
+        <p style={styles.badge}>Protected Dashboard</p>
+
+        <h1 style={styles.title}>Welcome to MiniBank</h1>
+
+        <p style={styles.description}>
+          You reached this page only after authenticating with Okta Redirect.
+        </p>
+
+        <div style={styles.infoBox}>
+          <p>
+            <strong>Name:</strong> {claims?.name || "Not provided"}
+          </p>
+          <p>
+            <strong>Email:</strong> {claims?.email || "Not provided"}
+          </p>
+          <p>
+            <strong>Subject ID:</strong> {claims?.sub}
+          </p>
+        </div>
+
+        <button onClick={logout} style={styles.secondaryButton}>
+          Logout
+        </button>
       </section>
     </main>
   );
@@ -35,7 +134,7 @@ const styles = {
   },
   card: {
     width: "100%",
-    maxWidth: "560px",
+    maxWidth: "620px",
     background: "#ffffff",
     borderRadius: "24px",
     padding: "40px",
@@ -73,10 +172,51 @@ const styles = {
     fontWeight: 700,
     cursor: "pointer",
   },
+  secondaryButton: {
+    border: "1px solid #cbd5e1",
+    borderRadius: "14px",
+    padding: "14px 22px",
+    background: "#ffffff",
+    color: "#0f172a",
+    fontSize: "16px",
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+  linkButton: {
+    display: "inline-block",
+    textDecoration: "none",
+    borderRadius: "14px",
+    padding: "14px 22px",
+    background: "#00297a",
+    color: "#ffffff",
+    fontSize: "16px",
+    fontWeight: 700,
+  },
+  actions: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "12px",
+    flexWrap: "wrap",
+  },
   note: {
     marginTop: "18px",
     color: "#64748b",
     fontSize: "14px",
+  },
+  success: {
+    color: "#15803d",
+    fontWeight: 700,
+    marginBottom: "18px",
+  },
+  infoBox: {
+    textAlign: "left",
+    background: "#f8fafc",
+    border: "1px solid #e2e8f0",
+    borderRadius: "16px",
+    padding: "20px",
+    marginBottom: "24px",
+    color: "#334155",
+    wordBreak: "break-word",
   },
 };
 
