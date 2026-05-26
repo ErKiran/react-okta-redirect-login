@@ -26,6 +26,10 @@ Okta redirects back to React callback URL
 React app loads protected dashboard
 ```
 
+Flow 
+
+![flow](flow.png)
+
 ---
 
 ## Prerequisites

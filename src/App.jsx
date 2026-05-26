@@ -54,7 +54,7 @@ function Home() {
           </>
         ) : (
           <button onClick={login} style={styles.button}>
-            Login with Okta Redirect
+            Login with Okta
           </button>
         )}
 
@@ -99,7 +99,7 @@ function ProtectedDashboard() {
         <h1 style={styles.title}>Welcome to MiniBank</h1>
 
         <p style={styles.description}>
-          You reached this page only after authenticating with Okta Redirect.
+          You reached this page only after authenticating with Okta.
         </p>
 
         <div style={styles.infoBox}>
